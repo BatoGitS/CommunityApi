@@ -91,7 +91,7 @@ namespace CommunityAPI.Controllers
                 SourceUserID = HttpContext.GetUserId(),
                 TargetUserID = userId.ToString(),
                 TechnologyID = technologyId.ToString(),
-                Score = score
+                Score = _score
             };
 
             var created = await _technologyScoreService.AddTechnologyScoreAsync(newTechnologyScore);
