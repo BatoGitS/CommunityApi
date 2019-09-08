@@ -1,17 +1,17 @@
 ﻿using AutoMapper;
-using CommunityAPI.Contracts;
 using CommunityAPI.Contracts.v1;
 using CommunityAPI.Contracts.v1.Request;
 using CommunityAPI.Contracts.v1.Response;
 using CommunityAPI.Domain;
 using CommunityAPI.Extensions;
+using CommunityAPI.HubConfig;
 using CommunityAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CommunityAPI.Controllers
@@ -20,11 +20,13 @@ namespace CommunityAPI.Controllers
     {
         private readonly ITechnologyScoreService _technologyScoreService;
         private readonly IMapper _mapper;
+        private readonly IHubContext<NotifyHub> _hub;
 
-        public TechnologyScoreController(ITechnologyScoreService technologyScoreService, IMapper mapper)
+        public TechnologyScoreController(ITechnologyScoreService technologyScoreService, IMapper mapper, IHubContext<NotifyHub> hub)
         {
             _technologyScoreService = technologyScoreService;
             _mapper = mapper;
+            _hub = hub;
         }
 
         [HttpGet(Routes.User.Technology.GetAll)]
@@ -98,10 +100,14 @@ namespace CommunityAPI.Controllers
                 return BadRequest(new { error = "Unable to set technology score" });
             }
 
+            var tech = await _technologyScoreService.GetTechnologyByIdAsync(userId, technologyId);
+
+            await _hub.Clients.User(userId.ToString()).SendAsync("newmark", tech, _score, default(System.Threading.CancellationToken));
+
             var locationUri = HttpContext.GetLocationURI(Routes.User.Technology.Get)
                 .Replace("{userId}", userId.ToString())
                 .Replace("{technologyId}", technologyId.ToString());
-            return Created(locationUri, await _technologyScoreService.GetTechnologyByIdAsync(userId, technologyId));
+            return Created(locationUri, tech);
         }
 
         [HttpDelete(Routes.User.Technology.Delete)]

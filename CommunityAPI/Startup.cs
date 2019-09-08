@@ -11,6 +11,9 @@ using CommunityAPI.Installers;
 using CommunityAPI.Data;
 using CommunityAPI.Domain;
 using AutoMapper;
+using Microsoft.AspNetCore.SignalR;
+using CommunityAPI.Extensions;
+using CommunityAPI.HubConfig;
 
 namespace CommunityAPI
 {
@@ -27,6 +30,8 @@ namespace CommunityAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
+            services.AddSignalR();
+            services.AddSingleton<IUserIdProvider, UserIdHubProvider>();
             services.InstallServicesInAssembly(Configuration);
             services.AddAutoMapper(typeof(Startup));
 
@@ -44,9 +49,9 @@ namespace CommunityAPI
             {
                 app.UseHsts();
             }
-            app.UseCors(builder => builder.AllowAnyOrigin()
+            app.UseCors(builder => builder.WithOrigins("http://localhost:4200").WithOrigins("https://batogits.github.io")
                    .AllowAnyMethod()
-                   .AllowAnyHeader());
+                   .AllowAnyHeader().AllowCredentials());
 
             app.UseHttpsRedirection();
 
@@ -63,6 +68,11 @@ namespace CommunityAPI
             app.UseSwaggerUI(option =>
             {
                 option.SwaggerEndpoint(swaggerOptions.UiEndpoint, swaggerOptions.Description);
+            });
+
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<NotifyHub>("/api/notify");
             });
 
             app.UseMvc();
