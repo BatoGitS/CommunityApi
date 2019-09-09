@@ -18,6 +18,7 @@ namespace CommunityAPI.Domain
         [Required]
         public string TechnologyID { get; set; }
 
+        public virtual IEnumerable<TechnologyScore> Scores { get; set; }
 
         [ForeignKey(nameof(TechnologyID))]
         public virtual Technology Technology { get; set; }

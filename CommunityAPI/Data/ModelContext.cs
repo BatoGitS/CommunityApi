@@ -29,6 +29,14 @@ namespace CommunityAPI.Data
                 entity.HasIndex(e => e.Name).IsUnique();
             });
 
+            modelBuilder.Entity<UserTechnology>(b =>
+            {
+
+                b.HasKey(x => new { x.UserID, x.TechnologyID });
+
+                b.HasMany(pa => pa.Scores).WithOne().HasForeignKey(pa => new { pa.TargetUserID, pa.TechnologyID });
+            });
+
             base.OnModelCreating(modelBuilder);
         }
     }
